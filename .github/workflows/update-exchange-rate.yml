@@ -1,0 +1,63 @@
+name: Cập nhật README từ API
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * *' # Chạy hàng ngày vào lúc 00:00 UTC
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Cài đặt jq để xử lý JSON
+        run: sudo apt-get install -y jq
+
+      - name: Gọi API, trích xuất dữ liệu và cập nhật README
+        env:
+          API_KEY: ${{ secrets.EXCHANGE_RATE_API_KEY }}
+        run: |
+          # URL API
+          API_URL="https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD"
+
+          # Gọi API và lưu phản hồi JSON
+          API_RESPONSE=$(curl -s "$API_URL")
+
+          # Trích xuất tỷ giá USD sang VND và USD sang CNY
+          VND_RATE=$(echo "$API_RESPONSE" | jq '.conversion_rates.VND')
+          CNY_RATE=$(echo "$API_RESPONSE" | jq '.conversion_rates.CNY')
+
+          # Kiểm tra nếu dữ liệu không rỗng
+          if [ -z "$VND_RATE" ] || [ -z "$CNY_RATE" ]; then
+            echo "Lỗi: Không thể lấy tỷ giá. Dữ liệu từ API có thể bị lỗi."
+            exit 1
+          fi
+
+          # Tạo nội dung mới cho file README.md
+          cat > README.md <<EOF
+          # Tỷ giá hối đoái hôm nay
+
+          Dữ liệu được lấy từ [ExchangeRate-API](https://www.exchangerate-api.com/).
+
+          ## Tỷ giá cập nhật
+
+          | Cặp tiền tệ | Tỷ giá |
+          |---|---|
+          | USD/VND | $VND_RATE |
+          | USD/CNY | $CNY_RATE |
+
+          *Cập nhật lần cuối: $(date +"%Y-%m-%d %H:%M:%S")*
+
+          EOF
+
+      - name: Commit và push thay đổi
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m 'Cập nhật README.md với tỷ giá mới' || echo "Không có thay đổi để commit"
+          git push
