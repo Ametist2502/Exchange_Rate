@@ -6,8 +6,8 @@ Dữ liệu được lấy từ [ExchangeRate-API](https://www.exchangerate-api.
 
 | Cặp tiền tệ | Tỷ giá |
 |---|---|
-| USD/VND | 26252.4906 |
-| USD/CNY | 6.8004 |
+| USD/VND | 26253.3362 |
+| USD/CNY | 6.8177 |
 
-*Cập nhật lần cuối: 2026-06-24 06:36:14*
+*Cập nhật lần cuối: 2026-06-25 06:40:05*
 
